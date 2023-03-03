@@ -26,12 +26,12 @@ void loop()
 
     last_change = now;
 
-    mycharger.reset_watchdog_timer();                                             //reset watch dog
-    Serial.printf("Battery voltage :%d \r\n", mycharger.adc_read_battery_volt()); // Read Battery voltage
-    Serial.printf("System Voltage  :%d \r\n", mycharger.adc_read_sys_volt());     // ReadSystem Voltage
-    Serial.printf("Bus Volatge :%d \r\n", mycharger.adc_read_vbus_volt());        // Read Volatge
-    Serial.printf("Temperature :%d  \r\n", mycharger.adc_read_temperature());     // Read Temperature
-    switch (mycharger.get_charging_status())                                      // charger status
+    mycharger.reset_watchdog_timer();                                                //reset watch dog
+    Serial.printf("Battery voltage :%d mV \r\n", mycharger.adc_read_battery_volt()); // Read Battery voltage
+    Serial.printf("System Voltage  :%d mV \r\n", mycharger.adc_read_sys_volt());     // ReadSystem Voltage
+    Serial.printf("Bus Volatge :%d mV \r\n", mycharger.adc_read_vbus_volt());        // Read Volatge
+    Serial.printf("Temperature :%d °C \r\n", mycharger.adc_read_temperature());      // Read Temperature
+    switch (mycharger.get_charging_status())                                         // charger status
     {
     case 0:
       Serial.print(" Charging status : Not Charging \r\n");
@@ -46,8 +46,8 @@ void loop()
       Serial.print(" Charging status : Charge Termination Done \r\n");
       break;
     }
-    Serial.printf("charger Current : %dA\r\n", mycharger.adc_read_charge_current()); // read charge current .
-    Serial.printf("Idmp limit : %dA\r\n ", mycharger.read_idpm_limit());             //Dynamic Power Management current limit
+    Serial.printf("Charger Current : %d mA \r\n", mycharger.adc_read_charge_current()); // read charge current .
+    Serial.printf("Idmp limit : %d mA \r\n", mycharger.read_idpm_limit());              //Dynamic Power Management current limit
    
   }
  

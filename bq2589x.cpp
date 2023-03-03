@@ -27,7 +27,7 @@ int bq2589x::begin(uint8_t addr)
  *   @param theWire the I2C object to use
  *   @returns true on success, false otherwise
  */
-int bq2589x::begin(uint8_t addr, TwoWire *theWire)
+int bq2589x::begin(uint8_t addr, TwoWire* theWire)
 {
     _i2caddr = addr;
     _wire = theWire;
@@ -46,14 +46,14 @@ int bq2589x::begin(void)
     return reset_chip();
 }
 
-int bq2589x::begin(TwoWire *theWire)
+int bq2589x::begin(TwoWire* theWire)
 {
     _wire = theWire;
     _i2caddr = BQ25895_ADDR;
     return reset_chip();
 }
 
-int bq2589x::read_byte(uint8_t *data, uint8_t reg)
+int bq2589x::read_byte(uint8_t* data, uint8_t reg)
 {
 
     int rtn;
@@ -67,13 +67,13 @@ int bq2589x::read_byte(uint8_t *data, uint8_t reg)
 
     if (rtn == I2C_OK)
     {
-        //Serial.println("BQ25895 Write OK");
-        return BQ2589X_OK; //TI lib uses 1 as failed
+        // Serial.println("BQ25895 Write OK");
+        return BQ2589X_OK; // TI lib uses 1 as failed
     }
     else
     {
-        //Serial.println("BQ25895 Write Err");
-        return BQ2589X_ERR; //TI lib uses 1 as failed
+        // Serial.println("BQ25895 Write Err");
+        return BQ2589X_ERR; // TI lib uses 1 as failed
     }
 }
 
@@ -89,12 +89,12 @@ int bq2589x::write_byte(uint8_t reg, uint8_t data)
     if (rtn == I2C_OK)
     {
         //  Serial.println("BQ25895 Write OK");
-        return BQ2589X_OK; //TI lib uses 1 as failed
+        return BQ2589X_OK; // TI lib uses 1 as failed
     }
     else
     {
         // Serial.println("BQ25895 Write Err");
-        return BQ2589X_ERR; //TI lib uses 1 as failed
+        return BQ2589X_ERR; // TI lib uses 1 as failed
     }
 }
 
@@ -132,16 +132,14 @@ int bq2589x::enable_otg()
 {
     uint8_t val = BQ2589X_OTG_ENABLE << BQ2589X_OTG_CONFIG_SHIFT;
 
-    return update_bits(BQ2589X_REG_03,
-                       BQ2589X_OTG_CONFIG_MASK, val);
+    return update_bits(BQ2589X_REG_03, BQ2589X_OTG_CONFIG_MASK, val);
 }
 
 int bq2589x::disable_otg()
 {
     uint8_t val = BQ2589X_OTG_DISABLE << BQ2589X_OTG_CONFIG_SHIFT;
 
-    return update_bits(BQ2589X_REG_03,
-                       BQ2589X_OTG_CONFIG_MASK, val);
+    return update_bits(BQ2589X_REG_03, BQ2589X_OTG_CONFIG_MASK, val);
 }
 
 int bq2589x::set_otg_volt(uint16_t volt)
@@ -211,8 +209,23 @@ int bq2589x::adc_start(bool oneshot)
     if (oneshot)
         ret = update_bits(BQ2589X_REG_02, BQ2589X_CONV_START_MASK, BQ2589X_CONV_START << BQ2589X_CONV_START_SHIFT);
     else
-        ret = update_bits(BQ2589X_REG_02, BQ2589X_CONV_RATE_MASK, BQ2589X_ADC_CONTINUE_ENABLE << BQ2589X_CONV_RATE_SHIFT);
+        ret =
+            update_bits(BQ2589X_REG_02, BQ2589X_CONV_RATE_MASK, BQ2589X_ADC_CONTINUE_ENABLE << BQ2589X_CONV_RATE_SHIFT);
     return ret;
+}
+
+bool bq2589x::is_adc_active()
+{
+    uint8_t val;
+    int ret;
+
+    ret = read_byte(&val, BQ2589X_REG_02);
+    if (ret)
+    {
+        return false;
+    }
+
+    return (val & (BQ2589X_CONV_START << BQ2589X_CONV_START_SHIFT)) != 0;
 }
 
 int bq2589x::adc_stop()
@@ -267,7 +280,10 @@ int bq2589x::adc_read_vbus_volt()
     }
     else
     {
-        volt = BQ2589X_VBUSV_BASE + ((val & BQ2589X_VBUSV_MASK) >> BQ2589X_VBUSV_SHIFT) * BQ2589X_VBUSV_LSB;
+        if (val & BQ2589X_VBUS_GD_MASK)
+            volt = BQ2589X_VBUSV_BASE + ((val & BQ2589X_VBUSV_MASK) >> BQ2589X_VBUSV_SHIFT) * BQ2589X_VBUSV_LSB;
+        else
+            volt = 0;
 
         return volt;
     }
@@ -340,6 +356,19 @@ int bq2589x::set_chargevoltage(int volt)
     return update_bits(BQ2589X_REG_06, BQ2589X_VREG_MASK, val << BQ2589X_VREG_SHIFT);
 }
 
+int bq2589x::get_chargevoltage()
+{
+    uint8_t val;
+    int ret = read_byte(&val, BQ2589X_REG_06);
+    if (ret)
+    {
+        return ret;
+    }
+
+    val = (val & BQ2589X_VREG_MASK) >> BQ2589X_VREG_SHIFT;
+    return val * BQ2589X_VREG_LSB + BQ2589X_VREG_BASE;
+}
+
 int bq2589x::set_input_volt_limit(int volt)
 {
     uint8_t val;
@@ -353,6 +382,20 @@ int bq2589x::set_input_current_limit(int curr)
 
     val = (curr - BQ2589X_IINLIM_BASE) / BQ2589X_IINLIM_LSB;
     return update_bits(BQ2589X_REG_00, BQ2589X_IINLIM_MASK, val << BQ2589X_IINLIM_SHIFT);
+}
+
+int bq2589x::get_input_current_limit()
+{
+    uint8_t val;
+    int ret = read_byte(&val, BQ2589X_REG_00);
+    if (ret)
+    {
+        return ret;
+    }
+    // Serial.printf("(BQ2589X_REG_00=%02X)", val);
+
+    val = (val & BQ2589X_IINLIM_MASK) >> BQ2589X_IINLIM_SHIFT;
+    return val * BQ2589X_IINLIM_LSB + BQ2589X_IINLIM_BASE;
 }
 
 int bq2589x::set_vindpm_offset(int offset)
@@ -371,7 +414,7 @@ int bq2589x::get_charging_status()
     ret = read_byte(&val, BQ2589X_REG_0B);
     if (ret)
     {
-        return 0x04; //Error
+        return 0x04; // Error
     }
     val &= BQ2589X_CHRG_STAT_MASK;
     val >>= BQ2589X_CHRG_STAT_SHIFT;
@@ -398,7 +441,8 @@ void bq2589x::bq2589x_set_otg(int enable)
 
 int bq2589x::set_watchdog_timer(uint8_t timeout)
 {
-    return update_bits(BQ2589X_REG_07, BQ2589X_WDT_MASK, (uint8_t)((timeout - BQ2589X_WDT_BASE) / BQ2589X_WDT_LSB) << BQ2589X_WDT_SHIFT);
+    return update_bits(BQ2589X_REG_07, BQ2589X_WDT_MASK,
+                       (uint8_t)((timeout - BQ2589X_WDT_BASE) / BQ2589X_WDT_LSB) << BQ2589X_WDT_SHIFT);
 }
 
 int bq2589x::disable_watchdog_timer()
@@ -424,7 +468,7 @@ int bq2589x::force_dpdm()
     if (ret)
         return ret;
 
-    //msleep(20);/*TODO: how much time needed to finish dpdm detect?*/
+    // msleep(20);/*TODO: how much time needed to finish dpdm detect?*/
     return BQ2589X_OK;
 }
 
@@ -461,7 +505,7 @@ int bq2589x::exit_hiz_mode()
     return update_bits(BQ2589X_REG_00, BQ2589X_ENHIZ_MASK, val);
 }
 
-int bq2589x::get_hiz_mode(uint8_t *state)
+int bq2589x::get_hiz_mode(uint8_t* state)
 {
     uint8_t val;
     int ret;
@@ -667,12 +711,12 @@ int bq2589x::init_device()
 
     disable_watchdog_timer();
 
-    ret = set_charge_current(2560); //2.5A
+    ret = set_charge_current(2560); // 2.5A
 
     return ret;
 }
 
-int bq2589x::detect_device(bq2589x_part_no *part_no, int *revision)
+int bq2589x::detect_device(bq2589x_part_no* part_no, int* revision)
 {
     uint8_t data;
     if (read_byte(&data, BQ2589X_REG_14) == 0)
@@ -705,4 +749,12 @@ int bq2589x::enable_max_charge(bool enable)
     ret = update_bits(BQ2589X_REG_02, BQ2589X_MAXCEN_MASK, val1);
 
     return ret;
+}
+
+uint8_t bq2589x::get_fault()
+{
+    uint8_t val;
+    if (read_byte(&val, BQ2589X_REG_0C) == 0)
+        return val;
+    return BQ2589X_ERR;
 }
