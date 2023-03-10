@@ -414,7 +414,7 @@ bq2589x_charging_state bq2589x::get_charging_status()
     ret = read_byte(&val, BQ2589X_REG_0B);
     if (ret)
     {
-        return 0x04; // Error
+        return BQ2589X_CHRG_STAT_ERROR;
     }
     val &= BQ2589X_CHRG_STAT_MASK;
     val >>= BQ2589X_CHRG_STAT_SHIFT;
