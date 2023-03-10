@@ -406,7 +406,7 @@ int bq2589x::set_vindpm_offset(int offset)
     return update_bits(BQ2589X_REG_01, BQ2589X_VINDPMOS_MASK, val << BQ2589X_VINDPMOS_SHIFT);
 }
 
-int bq2589x::get_charging_status()
+bq2589x_charging_state bq2589x::get_charging_status()
 {
     uint8_t val = 0;
     int ret;
@@ -418,7 +418,7 @@ int bq2589x::get_charging_status()
     }
     val &= BQ2589X_CHRG_STAT_MASK;
     val >>= BQ2589X_CHRG_STAT_SHIFT;
-    return val;
+    return (bq2589x_charging_state)val;
 }
 
 void bq2589x::bq2589x_set_otg(int enable)

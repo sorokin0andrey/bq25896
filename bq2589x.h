@@ -37,6 +37,15 @@ typedef enum bq2589x_part_no
     BQ25895 = 0x07,
 } bq2589x_part_no;
 
+typedef enum bq2589x_charging_state
+{
+    BQ2589X_CHRG_STAT_NOT_CHARGING,
+    BQ2589X_CHRG_STAT_PRE_CHARGE,
+    BQ2589X_CHRG_STAT_FAST_CHARGE,
+    BQ2589X_CHRG_STAT_TERMINATION_DONE,
+    BQ2589X_CHRG_STAT_ERROR
+} bq2589x_charging_state;
+
 class bq2589x
 {
 private:
@@ -78,7 +87,7 @@ public:
     int set_input_current_limit(int curr);
     int get_input_current_limit();
     int set_vindpm_offset(int offset);
-    int get_charging_status();
+    bq2589x_charging_state get_charging_status();
     void bq2589x_set_otg(int enable);
     int set_watchdog_timer(uint8_t timeout);
     int disable_watchdog_timer();
