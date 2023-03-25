@@ -245,6 +245,8 @@ int bq2589x::adc_read_battery_volt()
     }
     else
     {
+        if ((val & BQ2589X_BATV_MASK) == 0)
+            return 0;
 
         volt = (BQ2589X_BATV_BASE + ((val & BQ2589X_BATV_MASK) >> BQ2589X_BATV_SHIFT) * BQ2589X_BATV_LSB);
         return volt;
@@ -263,6 +265,9 @@ int bq2589x::adc_read_sys_volt()
     }
     else
     {
+        if ((val & BQ2589X_SYSV_MASK) == 0)
+            return 0;
+
         volt = BQ2589X_SYSV_BASE + ((val & BQ2589X_SYSV_MASK) >> BQ2589X_SYSV_SHIFT) * BQ2589X_SYSV_LSB;
         return volt;
     }
