@@ -328,11 +328,23 @@ int bq2589x::adc_read_charge_current()
     }
 }
 
-int bq2589x::set_charge_current(int curr)
+int bq2589x::set_charge_current_limit(int curr)
 {
     uint8_t ichg;
-    ichg = (curr - BQ2589X_ICHG_BASE) / BQ2589X_ICHG_LSB;
+    ichg = (curr - BQ2589X_ICHG_BASE + BQ2589X_ICHG_LSB / 2) / BQ2589X_ICHG_LSB;
     return update_bits(BQ2589X_REG_04, BQ2589X_ICHG_MASK, ichg << BQ2589X_ICHG_SHIFT);
+}
+
+int bq2589x::get_charge_current_limit()
+{
+    uint8_t val;
+    int ret = read_byte(&val, BQ2589X_REG_04);
+    if (ret)
+    {
+        return ret;
+    }
+    val = (val & BQ2589X_ICHG_MASK) >> BQ2589X_ICHG_SHIFT;
+    return val * BQ2589X_ICHG_LSB + BQ2589X_ICHG_BASE;
 }
 
 int bq2589x::set_term_current(int curr)
@@ -716,7 +728,7 @@ int bq2589x::init_device()
 
     disable_watchdog_timer();
 
-    ret = set_charge_current(2560); // 2.5A
+    ret = set_charge_current_limit(2560); // 2.5A
 
     return ret;
 }
@@ -762,4 +774,47 @@ uint8_t bq2589x::get_fault()
     if (read_byte(&val, BQ2589X_REG_0C) == 0)
         return val;
     return BQ2589X_ERR;
+}
+
+int bq2589x::set_sys_min(int volt)
+{
+    uint8_t val;
+
+    val = (volt - BQ2589X_SYS_MINV_BASE + BQ2589X_SYS_MINV_LSB / 2) / BQ2589X_SYS_MINV_LSB;
+    return update_bits(BQ2589X_REG_03, BQ2589X_SYS_MINV_MASK, val << BQ2589X_SYS_MINV_SHIFT);
+}
+
+int bq2589x::get_sys_min()
+{
+    uint8_t val;
+    int ret = read_byte(&val, BQ2589X_REG_03);
+    if (ret)
+    {
+        return ret;
+    }
+
+    val = (val & BQ2589X_SYS_MINV_MASK) >> BQ2589X_SYS_MINV_SHIFT;
+    return val * BQ2589X_SYS_MINV_LSB + BQ2589X_SYS_MINV_BASE;
+}
+
+int bq2589x::set_rechg_volt_offset(int mvolt)
+{
+    if (mvolt < 100 || mvolt > 200)
+        return BQ2589X_ERR;
+
+    uint8_t val = (mvolt < 150) ? BQ2589X_VRECHG_100MV : BQ2589X_VRECHG_200MV;
+    return update_bits(BQ2589X_REG_06, BQ2589X_VRECHG_MASK, val << BQ2589X_VRECHG_SHIFT);
+}
+
+int bq2589x::get_rechg_volt_offset()
+{
+    uint8_t val;
+    int ret = read_byte(&val, BQ2589X_REG_06);
+    if (ret)
+    {
+        return ret;
+    }
+
+    val = (val & BQ2589X_VRECHG_MASK) >> BQ2589X_VRECHG_SHIFT;
+    return (val == BQ2589X_VRECHG_200MV) ? 200 : 100;
 }

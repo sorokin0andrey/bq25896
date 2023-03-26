@@ -15,7 +15,7 @@
 #define SDA_PIN 4
 
 #define BQ2589X_OK 0
-#define BQ2589X_ERR 1 //  ERR>0
+#define BQ2589X_ERR -1 //  ERR>0
 
 typedef enum bq2589x_vbus_type
 {
@@ -60,9 +60,13 @@ public:
     int begin(TwoWire* theWire);
     int begin(uint8_t addr);
     int begin(uint8_t addr, TwoWire* theWire);
+
+private:
     int read_byte(uint8_t* data, uint8_t reg);
     int write_byte(uint8_t reg, uint8_t data);
     int update_bits(uint8_t reg, uint8_t mask, uint8_t data);
+
+public:
     bq2589x_vbus_type get_vbus_type();
     int enable_otg();
     int disable_otg();
@@ -78,7 +82,8 @@ public:
     int adc_read_vbus_volt();
     int adc_read_temperature();
     int adc_read_charge_current();
-    int set_charge_current(int curr);
+    int set_charge_current_limit(int curr);
+    int get_charge_current_limit();
     int set_term_current(int curr);
     int set_prechg_current(int curr);
     int set_chargevoltage(int volt);
@@ -115,6 +120,10 @@ public:
     int detect_device(bq2589x_part_no* part_no, int* revision);
     int enable_max_charge(bool enable);
     uint8_t get_fault();
+    int set_sys_min(int mvolt);
+    int get_sys_min();
+    int set_rechg_volt_offset(int mvolt);
+    int get_rechg_volt_offset();
 };
 
 #endif
