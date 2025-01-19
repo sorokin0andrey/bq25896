@@ -11,9 +11,6 @@
 #define I2C_OK 0 // 0:success
 #define I2C_ERR 1
 
-#define SCL_PIN 5
-#define SDA_PIN 4
-
 #define BQ2589X_OK 0
 #define BQ2589X_ERR -1 //  ERR>0
 
