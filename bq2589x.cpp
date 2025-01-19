@@ -454,7 +454,7 @@ int bq2589x::enable_ilim_pin() {
 }
 
 int bq2589x::disable_ilim_pin() {
-  uint8_t val = BQ2589X_ENILIM_ENABLE << BQ2589X_ENILIM_SHIFT;
+  uint8_t val = BQ2589X_ENILIM_DISABLE << BQ2589X_ENILIM_SHIFT;
   return update_bits(BQ2589X_REG_00, BQ2589X_ENILIM_MASK, val);
 }
 
